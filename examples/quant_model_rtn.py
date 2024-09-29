@@ -78,7 +78,7 @@ def quant_model(model, args):
 
         for name, module in named_linears.items():
 
-            print(name,module)
+            print(i, name,module)
             #original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
             #w_rtn = RTNParameter(original_weight)
