@@ -16,6 +16,7 @@ from tqdm import tqdm
 import torch
 import transformers
 import argparse
+import torch.nn as nn
 
 from transformers import (
     AutoTokenizer,
