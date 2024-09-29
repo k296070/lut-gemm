@@ -99,6 +99,8 @@ def get_named_linears2(module):
 
 def get_named_linears(module):
     return {name: m for name, m in module.named_modules() if isinstance(m, nn.Linear)}
+def get_non_named_linears(module):
+    return {name: m for name, m in module.named_modules() if (isinstance(m, nn.Linear)!=1)}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
@@ -139,6 +141,7 @@ def parse_args():
 
 #def quant_model(model, module_to_not_convert:str = "lm_head"):
 def quant_model(model, args):
+    state_dict = {}
     layers = model.model.layers
     print(layers)
     for i in tqdm(
@@ -146,48 +149,17 @@ def quant_model(model, args):
     ):
         layer = layers[i]
         named_linears = get_named_linears2(layer)
-    
+        non_linears = get_non_named_linears(layer)
     
         for name, module in named_linears.items():
 
-            print(i, name,module)
-            original_weight = module.weight.clone().detach()
-            # INT4 Quantization -> RTN
-            w_rtn = RTNParameter()
-            #scale, zero, w_quant, w_quant_shape = w_rtn.compress(
-            #    in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
-            #    perchannel=True, sym=False)
-            scale = f["model.layers.30.self_attn.v_proj.scales"]
-            zero = f["model.layers.30.self_attn.v_proj.scaled_zeros"]
-            w_quant =  f["model.layers.30.self_attn.v_proj.qweight"]
+            print(i, name,module,"linear")
+            
+        for name, module in non_linears.items():
 
-            # Convert INT4 -> BCQ4
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=False, in_ch_wise=False)
+            print(i, name,module,"non")
 
-            print("Parameter size before packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
-
-            # Packing BCQ4 -> Packed Weight (uint8)
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=True, in_ch_wise=False)
-
-            print("Parameter size after packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
-
-            #my_state_dict = {
-            #    'model.layers.30.self_attn.v_proj.alpha': alpha, 
-            #    'model.layers.30.self_attn.v_proj.binary': binary, 
-            #    'model.layers.30.self_attn.v_proj.zero': zero
-            #}
-
-            #torch.save(my_state_dict,"layer30_v_proj_weight_packed.pt")
+    return state_dict
 
 
 def main():
@@ -221,8 +193,8 @@ def main():
         offload_state_dict=True,
     )
 
-    model = quant_model(model, args)
-
+    state_dict = quant_model(model, args)
+    torch.save(state_dict,"output-4bit.pt")
 
 if __name__ == "__main__":
     main()
