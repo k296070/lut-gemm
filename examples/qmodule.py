@@ -132,7 +132,40 @@ class WQLinear(nn.Module):
                 device=dev,
             ),
         )        
-  
+        self.register_buffer(
+            "q_bias",
+            torch.zeros(
+                (
+                    out_features,
+                    in_features // group_size,
+                    1
+                ),
+                dtype=torch.float32,
+                device=dev,
+            ),
+        )
+        self.register_buffer(
+            "alpha",
+            torch.zeros(
+                (
+                    out_features,
+                    in_features // group_size,
+                    4
+                ),
+                dtype=torch.float32,
+                device=dev,
+            ),
+        )
+        self.register_buffer(
+            "binary",
+            torch.zeros(
+                (
+                    out_features*in_features/2
+                ),
+                dtype=torch.int8,
+                device=dev,
+            ),
+        )                        
         if bias:
             self.register_buffer(
                 "bias", torch.zeros((out_features), dtype=torch.float16, device=dev)

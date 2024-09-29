@@ -141,7 +141,7 @@ def parse_args():
 
 #def quant_model(model, module_to_not_convert:str = "lm_head"):
 def quant_model(model, args):
-    state_dict = {}
+
     layers = model.model.layers
     for i in tqdm(
         range(len(layers)),
@@ -152,13 +152,38 @@ def quant_model(model, args):
     
         for name, module in named_linears.items():
 
-            print(i, name,module,"linear")
+            print(name)
             
-        for name, module in non_linears.items():
+            # INT4 Quantization -> RTN
+            w_rtn = RTNParameter()
+            scale = module.scales
+            zero = module.scaled_zeros
+            w_quant = module.qweight
 
-            print(i, name,module,"non")
+            # Convert INT4 -> BCQ4
+            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+                scale, zero, w_quant, qbits=args.qbits,
+                do_packing=False, in_ch_wise=False)
 
-    return state_dict
+            print("Parameter size before packing")
+            print("  alpha.size()  =", alpha.size())
+            print("  binary.size() =", binary.size())
+            print("="*30)
+
+            # Packing BCQ4 -> Packed Weight (uint8)
+            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+                scale, zero, w_quant, qbits=args.qbits,
+                do_packing=True, in_ch_wise=False)
+
+            module.w_quant = binary
+            module.alpha = alpha
+            module.q_bias = scale * zero
+
+            print("Parameter size after packing")
+            print("  alpha.size()  =", alpha.size())
+            print("  binary.size() =", binary.size())
+            print("="*30)
+    return model
 
 
 def main():
@@ -192,8 +217,9 @@ def main():
         offload_state_dict=True,
     )
 
-    state_dict = quant_model(model, args)
-    torch.save(state_dict,"output-4bit.pt")
+    quant_model(model, args)
+    filtered_state_dict = {k: v for k, v in model.state_dict().items() if not any(substr in k for substr in ['qweight', 'scaled_zeros', 'scales'])}
+    torch.save(filtered_state_dict,"output-4bit.pt")
 
 if __name__ == "__main__":
     main()
