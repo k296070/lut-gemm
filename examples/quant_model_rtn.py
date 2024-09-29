@@ -70,9 +70,10 @@ def quant_model(model, args):
             quant_model(module, args)
 
         if any(x in name for x in layers):
-            print(name," in")
+            print(name, module," in")
             original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
+            print(original_weight.dtype)
             w_rtn = RTNParameter(original_weight)
             scale, zero, w_quant, w_quant_shape = w_rtn.compress(
                 in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
@@ -103,7 +104,7 @@ def quant_model(model, args):
             #print("  binary.size() =", binary.size())
             print("="*30)
         else :
-            print(name," out")
+            print(name, module," out")
             print("="*30)
 
     return model
