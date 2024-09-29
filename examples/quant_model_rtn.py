@@ -70,32 +70,40 @@ def quant_model(model, args):
             quant_model(module, args)
 
         if any(x in name for x in layers):
-            print(name)
+            print(name," in")
             original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
             w_rtn = RTNParameter(original_weight)
             scale, zero, w_quant, w_quant_shape = w_rtn.compress(
                 in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
                 perchannel=True, sym=False)
-
+            print("w_quant ",w_quant.shape)
+            print(w_quant.dtype)
+            print("scale" ,scale.shape)
+            print(scale.dtype)
+            print("zero ",zero.shape)
+            print(zero.dtype)
             # Convert INT4 -> BCQ4
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=False, in_ch_wise=False)
+            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+            #    scale, zero, w_quant, qbits=args.qbits,
+            #    do_packing=False, in_ch_wise=False)
 
-            print("Parameter size before packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
+            #print("Parameter size before packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            #print("="*30)
 
             # Packing BCQ4 -> Packed Weight (uint8)
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=True, in_ch_wise=False)
+            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+            #    scale, zero, w_quant, qbits=args.qbits,
+            #    do_packing=True, in_ch_wise=False)
 
-            print("Parameter size after packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
+            #print("Parameter size after packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            print("="*30)
+        else :
+            print(name," out")
             print("="*30)
 
     return model
