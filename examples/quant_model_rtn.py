@@ -95,7 +95,7 @@ def real_quantize_model_weight(model, w_bit, init_only=False):
 layers = ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
 
 def get_named_linears(module):
-    return {name: m for name, m in module.named_modules() if isinstance(m, nn.Linear)}
+    return {name: m for name, m in module.named_modules() if isinstance(m, WQLinear)}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
