@@ -114,7 +114,7 @@ def quant_model(model, args,f):
             my_state_dict = {
                 'model.layers.30.self_attn.v_proj.alpha': alpha, 
                 'model.layers.30.self_attn.v_proj.binary': binary, 
-                'model.layers.30.self_attn.v_proj.alpha.zero': zero
+                'model.layers.30.self_attn.v_proj.zero': zero
             }
             torch.save(my_state_dict,"layer30_v_proj_weight_packed.pt")
 
