@@ -203,7 +203,6 @@ def main():
         checkpoint=args.load_quant,
         device_map="auto",
         offload_state_dict=True,
-        assign=True
     )
 
     model = quant_model(model, args)
