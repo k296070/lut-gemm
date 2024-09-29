@@ -67,7 +67,6 @@ def parse_args():
 def quant_model(model, args):
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
-            print(name, module," out")
             quant_model(module, args)
 
         if any(x in name for x in layers):
