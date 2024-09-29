@@ -156,7 +156,7 @@ def quant_model(model, args):
             
             # INT4 Quantization -> RTN
             w_rtn = RTNParameter()
-            scale = module.scales
+            scale = module.scales.to(torch.device('cuda:0'))
             zero = module.scaled_zeros
             w_quant = module.qweight
 
