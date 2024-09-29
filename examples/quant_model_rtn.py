@@ -74,9 +74,12 @@ def quant_model(model, args):
             original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
             w_rtn = RTNParameter(original_weight)
-            scale, zero, w_quant, w_quant_shape = w_rtn.compress(
-                in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
-                perchannel=True, sym=False)
+            #scale, zero, w_quant, w_quant_shape = w_rtn.compress(
+            #    in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
+            #    perchannel=True, sym=False)
+            scale = module.scales
+            zero = module.scaled_zero
+            w_quant = module.qweight
 
             # Convert INT4 -> BCQ4
             alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
@@ -98,6 +101,11 @@ def quant_model(model, args):
             print("  binary.size() =", binary.size())
             print("="*30)
 
+            module.alpha = alpha
+            module.binary = binary
+            module.w_quant = w_quant
+
+
     return model
 
 def main():
@@ -107,7 +115,14 @@ def main():
             args.model_name_or_path,
             cache_dir=args.cache_dir,
         )
+    
     model = quant_model(model, args)
+
+    torch.save({
+    'alpha': model.alpha,
+    'binary': model.binary,
+    'w_quant': model.w_quant
+    }, 'LLama3-8B-lut-gemm.pt')
 
 if __name__ == "__main__":
     main()
