@@ -35,6 +35,7 @@ from accelerate import (
 )
 from rtn_parameter import RTNParameter
 from bcq_parameter import BCQParameter
+from qmodule import WQLinear
 
 def set_op_by_name(layer, name, new_module):
     levels = name.split(".")
@@ -57,7 +58,6 @@ def get_blocks(model):
         layers = model.model.layers
 
 def real_quantize_model_weight(model, w_bit, init_only=False):
-    from .qmodule import WQLinear
 
     layers = get_blocks(model)
     for i in tqdm(
