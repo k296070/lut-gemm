@@ -35,7 +35,7 @@ from bcq_parameter import BCQParameter
 layers = ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
 
 def get_named_linears(module):
-    return {name: m for name, m in module.named_modules()}
+    return {name: m for name, m in module.named_modules() if isinstance(m, nn.Linear)}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
@@ -68,55 +68,56 @@ def parse_args():
     return args
 
 #def quant_model(model, module_to_not_convert:str = "lm_head"):
-def quant_model(model, args):
-    layers = model.model.layers
+def quant_model(model, args,f):
+    #layers = model.model.layers
 
-    for i in tqdm(
-        range(len(layers)),
-    ):
-        layer = layers[i]
-        named_linears = get_named_linears(layer)
+    #for i in tqdm(
+    #    range(len(layers)),
+    #):
+    #    layer = layers[i]
+    #    named_linears = get_named_linears(layer)
+    #
+    #
+    #    for name, module in named_linears.items():
 
-
-        for name, module in named_linears.items():
-
-            print(i, name,module)
+    #        print(i, name,module)
             #original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
-            #w_rtn = RTNParameter(original_weight)
+            w_rtn = RTNParameter()
             #scale, zero, w_quant, w_quant_shape = w_rtn.compress(
             #    in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
             #    perchannel=True, sym=False)
-            #scale = module.scales
-            ##zero = module.scaled_zero
-            #w_quant = module.qweight
+            scale = f["model.layers.30.self_attn.v_proj.scales"]
+            zero = f["model.layers.30.self_attn.v_proj.scaled_zeros"]
+            w_quant =  f["model.layers.30.self_attn.v_proj.qweight"]
 
             # Convert INT4 -> BCQ4
-            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-            #    scale, zero, w_quant, qbits=args.qbits,
-            #    do_packing=False, in_ch_wise=False)
+            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+                scale, zero, w_quant, qbits=args.qbits,
+                do_packing=False, in_ch_wise=False)
 
-            #print("Parameter size before packing")
-            #print("  alpha.size()  =", alpha.size())
-            #print("  binary.size() =", binary.size())
-            #print("="*30)
+            print("Parameter size before packing")
+            print("  alpha.size()  =", alpha.size())
+            print("  binary.size() =", binary.size())
+            print("="*30)
 
             # Packing BCQ4 -> Packed Weight (uint8)
-            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-            #    scale, zero, w_quant, qbits=args.qbits,
-            #    do_packing=True, in_ch_wise=False)
+            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+                scale, zero, w_quant, qbits=args.qbits,
+                do_packing=True, in_ch_wise=False)
 
-            #print("Parameter size after packing")
-            #print("  alpha.size()  =", alpha.size())
-            #print("  binary.size() =", binary.size())
-            #print("="*30)
+            print("Parameter size after packing")
+            print("  alpha.size()  =", alpha.size())
+            print("  binary.size() =", binary.size())
+            print("="*30)
 
-            #module.alpha = alpha
-            #module.binary = binary
-            #module.w_quant = w_quant
+            my_state_dict = {
+                'model.layers.30.self_attn.v_proj.alpha': alpha, 
+                'model.layers.30.self_attn.v_proj.binary': binary, 
+                'model.layers.30.self_attn.v_proj.alpha.zero': zero
+            }
+            torch.save(my_state_dict,"layer30_v_proj_weight_packed.pt")
 
-
-    return model
 
 def main():
     args = parse_args()
@@ -126,7 +127,8 @@ def main():
             cache_dir=args.cache_dir,
         )
     
-    model = quant_model(model, args)
+    f= torch.load("../llm-awq/quant_cache/Meta-Llama-3-8B-w4-g128-awq-lutgemm-v2.pt")
+    model = quant_model(model, args,f)
 
     torch.save({
     'alpha': model.alpha,
