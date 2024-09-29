@@ -77,7 +77,7 @@ class RTNParameter(CompressionParameter):
     def convert_bcq_format(self, scale, zero, quant_data, qbits, do_packing=False, in_ch_wise=False):
         global PACKER
 
-        zero   = scale * zero
+        #zero   = scale * zero
         upack  = torch.Tensor([[2**i for i in range(qbits)]])
         scale  = scale / 2.0
         scale  = torch.matmul(scale, upack)

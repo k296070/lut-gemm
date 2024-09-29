@@ -116,7 +116,7 @@ def main():
             cache_dir=args.cache_dir,
         )
     
-    model = quant_model(model, args)
+    model = quant_model(model.state_dict(), "LLama3-4bit.pt")
 
     torch.save({
     'alpha': model.alpha,
