@@ -36,7 +36,7 @@ class RTNParameter(CompressionParameter):
             data = self.data
             if group_size > 0:
                 data = data.reshape([-1, group_size])
-            quant.find_params(data, weight=True)
+            quant.find_params(data, weight=True) #scale
             quant_data  = torch.clamp(torch.round(data / quant.scale) + quant.zero, 0, quant.maxq)
             quant_data  = quant_data.reshape([out_ch, -1, group_size]).to(torch.int)
             quant.scale = quant.scale.reshape([out_ch, -1, 1])
