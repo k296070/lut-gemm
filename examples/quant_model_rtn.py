@@ -172,14 +172,13 @@ def quant_model(model, args,f):
 
 def main():
     args = parse_args()
-    with init_empty_weights():
-        model = AutoModelForCausalLM.from_pretrained(
-                args.model_name_or_path,
-                cache_dir=args.cache_dir,
-            )
+    model = AutoModelForCausalLM.from_pretrained(
+            args.model_name_or_path,
+            cache_dir=args.cache_dir,
+        )
     
     real_quantize_model_weight(
-        model, w_bit=args.w_bit, init_only=True
+        model, w_bit=args.qbits, init_only=True
     )
     
     load_checkpoint_in_model(
@@ -187,6 +186,7 @@ def main():
         checkpoint=args.load_quant,
         device_map="auto",
         offload_state_dict=True,
+        assign=True
     )
 
     model = quant_model(model, args)

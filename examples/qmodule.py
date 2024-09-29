@@ -139,7 +139,7 @@ class WQLinear(nn.Module):
 
     @classmethod
     def from_linear(
-        cls, linear, w_bit, group_size, init_only=False, scales=None, zeros=None
+        cls, linear, w_bit, group_size, init_only=True, scales=None, zeros=None
     ):
         awq_linear = cls(
             w_bit,
@@ -151,54 +151,6 @@ class WQLinear(nn.Module):
         )
         if init_only:  # just prepare for loading sd
             return awq_linear
-
-        # need scales and zeros info for real quantization
-        assert scales is not None and zeros is not None
-
-        awq_linear.scaled_zeros = zeros.contiguous().reshape([zeros.shape[0], zeros.shape[1], 1])
-        #print(scales.size()," ",zeros.size())
-        
-        scale_zeros = zeros * scales
-
-        pack_num = 32 // awq_linear.w_bit
-        qscales = torch.zeros(
-            (
-                scales.shape[0],
-                calculate_zeros_width(linear.in_features, group_size) * pack_num,
-            ),
-            dtype=torch.float16,
-            device=scales.device,
-        )
-        qscales[:, : scales.shape[1]] = scales
-        # awq_linear.scales = scales.clone().half()
-        awq_linear.scales = qscales.contiguous().reshape([qscales.shape[0], qscales.shape[1], 1])
-        awq_linear.scales = awq_linear.scales.to(dtype=torch.float32)
-        if linear.bias is not None:
-            awq_linear.bias = linear.bias.clone().half()
-
-        intweight = []
-        for idx in range(awq_linear.in_features):
-            intweight.append(
-                torch.round(
-                    (linear.weight.data[:, idx] + scale_zeros[:, idx // group_size])
-                    / qscales[:, idx // group_size]
-                ).to(torch.int)[:, None]
-            )
-        intweight = torch.cat(intweight, dim=1)
-        # intweight = intweight.t().contiguous()
-        intweight = intweight.to(dtype=torch.int32).reshape([intweight.shape[0], -1, group_size])
-        awq_linear.qweight = intweight
-
-        zeros = zeros.to(dtype=torch.int32)
-        scaled_zeros = torch.zeros_like(qscales)
-        # scaled_zeros[:, :scales.shape[1]] = -(qscales[:, :scales.shape[1]] * (zeros.to(torch.float32) - 8.0)).to(torch.float16)
-        scaled_zeros[:, : scales.shape[1]] = -(
-            qscales[:, : scales.shape[1]] * (zeros.to(torch.float32))
-        )
-
-        awq_linear.scaled_zeros=awq_linear.scaled_zeros.to(dtype=torch.float32)
-
-        return awq_linear
 
 
     def extra_repr(self) -> str:
