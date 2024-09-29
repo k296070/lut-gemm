@@ -31,7 +31,7 @@ from rtn_parameter import RTNParameter
 from bcq_parameter import BCQParameter
 
 
-layers = ["q_proj","k_proj","v_proj","out_proj","fc1","fc2"]
+layers = ["q_proj","k_proj","v_proj","o_proj","fc1","fc2"]
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
@@ -67,6 +67,7 @@ def parse_args():
 def quant_model(model, args):
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
+            print("!!!!!!!!")
             quant_model(module, args)
 
         if any(x in name for x in layers):
