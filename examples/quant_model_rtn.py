@@ -137,7 +137,7 @@ def parse_args():
 #def quant_model(model, module_to_not_convert:str = "lm_head"):
 def quant_model(model, args):
     layers = model.model.layers
-
+    print(layers)
     for i in tqdm(
         range(len(layers)),
     ):
