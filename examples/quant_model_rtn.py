@@ -165,10 +165,10 @@ def quant_model(model, args):
                 scale, zero, w_quant, qbits=args.qbits,
                 do_packing=False, in_ch_wise=False)
 
-            print("Parameter size before packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
+            #print("Parameter size before packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            #print("="*30)
 
             # Packing BCQ4 -> Packed Weight (uint8)
             alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
@@ -179,10 +179,10 @@ def quant_model(model, args):
             module.alpha = alpha
             module.q_bias = scale * zero
 
-            print("Parameter size after packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
+            #print("Parameter size after packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            #print("="*30)
     return model
 
 
@@ -219,7 +219,13 @@ def main():
 
     quant_model(model, args)
     filtered_state_dict = {k: v for k, v in model.state_dict().items() if not any(substr in k for substr in ['qweight', 'scaled_zeros', 'scales'])}
-    torch.save(filtered_state_dict,"output-4bit.pt")
+    lay_30diict ={"model.layers.30.self_attn.v_proj.q_bias":model.state_dict()["model.layers.30.self_attn.v_proj.q_bias"],
+                  "model.layers.30.self_attn.v_proj.alpha":model.state_dict()["model.layers.30.self_attn.v_proj.alpha"],
+                  "model.layers.30.self_attn.v_proj.binary":model.state_dict()["model.layers.30.self_attn.v_proj.binary"],
+
+    }
+    #torch.save(filtered_state_dict,"output-4bit.pt")
+    torch.save(lay_30diict,"layer30_v_proj_weight_packed.pt")
 
 if __name__ == "__main__":
     main()
