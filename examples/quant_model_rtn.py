@@ -67,7 +67,7 @@ def parse_args():
 def quant_model(model, args):
     for name, module in model.named_children():
         if len(list(module.children())) > 0:
-            print("!!!!!!!!")
+            print(name, module," out")
             quant_model(module, args)
 
         if any(x in name for x in layers):
@@ -103,9 +103,6 @@ def quant_model(model, args):
             #print("Parameter size after packing")
             #print("  alpha.size()  =", alpha.size())
             #print("  binary.size() =", binary.size())
-            print("="*30)
-        else :
-            print(name, module," out")
             print("="*30)
 
     return model
