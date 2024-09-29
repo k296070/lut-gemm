@@ -56,7 +56,24 @@ def get_named_linears(module):
 def get_blocks(model):
     if model.__class__.__name__ == "LlamaForCausalLM":
         layers = model.model.layers
-
+    elif model.__class__.__name__ == "LlavaLlamaForCausalLM":
+        # layers = [model.model.layers, model.model.vision_tower.vision_tower.vision_model.encoder.layers]
+        layers = model.model.layers
+    elif isinstance(model, OPTForCausalLM):
+        layers = model.model.decoder.layers
+    elif isinstance(model, BloomForCausalLM):
+        layers = model.transformer.h
+    elif "mpt" in str(model.__class__).lower():
+        layers = model.transformer.blocks
+    elif "falcon" in str(model.__class__).lower():
+        layers = model.transformer.h
+    elif "bigcode" in str(model.__class__).lower():
+        layers = model.transformer.h
+    elif "neox" in str(model.__class__).lower():
+        layers = model.gpt_neox.layers
+    else:
+        raise NotImplementedError(type(model))
+    return layers
 def real_quantize_model_weight(model, w_bit, init_only=False):
 
     layers = get_blocks(model)
