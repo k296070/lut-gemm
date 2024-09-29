@@ -100,7 +100,7 @@ def get_named_linears2(module):
 def get_named_linears(module):
     return {name: m for name, m in module.named_modules() if isinstance(m, nn.Linear)}
 def get_non_named_linears(module):
-    return {name: m for name, m in module.named_modules() if (isinstance(m, nn.Linear)!=1)}
+    return {name: m for name, m in module.named_modules() if (isinstance(m, WQLinear)!=1)}
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
@@ -143,7 +143,6 @@ def parse_args():
 def quant_model(model, args):
     state_dict = {}
     layers = model.model.layers
-    print(layers)
     for i in tqdm(
         range(len(layers)),
     ):
