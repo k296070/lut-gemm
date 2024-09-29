@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from tqdm import tqdm
 import torch
 import transformers
 import argparse
@@ -32,7 +32,8 @@ from bcq_parameter import BCQParameter
 
 
 layers = ["q_proj","k_proj","v_proj","o_proj","gate_proj","up_proj","down_proj"]
-
+def get_named_linears(module):
+    return {name: m for name, m in module.named_modules() if isinstance(m, nn.Linear)}
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a causal language modeling task")
     parser.add_argument(
@@ -65,45 +66,51 @@ def parse_args():
 
 #def quant_model(model, module_to_not_convert:str = "lm_head"):
 def quant_model(model, args):
-    for name, module in model.named_children():
-        if len(list(module.children())) > 0:
-            quant_model(module, args)
+    layers = model.model.layers
 
-        if any(x in name for x in layers):
-            print(name)
-            original_weight = module.weight.clone().detach()
+    for i in tqdm(
+        range(len(layers)),
+    ):
+        layer = layers[i]
+        named_linears = get_named_linears(layer)
+
+
+        for name, module in named_linears.items():
+
+            print(name,module)
+            #original_weight = module.weight.clone().detach()
             # INT4 Quantization -> RTN
-            w_rtn = RTNParameter(original_weight)
+            #w_rtn = RTNParameter(original_weight)
             #scale, zero, w_quant, w_quant_shape = w_rtn.compress(
             #    in_ch_wise=False, qbits=args.qbits, group_size=args.group_size,
             #    perchannel=True, sym=False)
-            scale = module.scales
-            zero = module.scaled_zero
-            w_quant = module.qweight
+            #scale = module.scales
+            ##zero = module.scaled_zero
+            #w_quant = module.qweight
 
             # Convert INT4 -> BCQ4
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=False, in_ch_wise=False)
+            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+            #    scale, zero, w_quant, qbits=args.qbits,
+            #    do_packing=False, in_ch_wise=False)
 
-            print("Parameter size before packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
+            #print("Parameter size before packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            #print("="*30)
 
             # Packing BCQ4 -> Packed Weight (uint8)
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=True, in_ch_wise=False)
+            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+            #    scale, zero, w_quant, qbits=args.qbits,
+            #    do_packing=True, in_ch_wise=False)
 
-            print("Parameter size after packing")
-            print("  alpha.size()  =", alpha.size())
-            print("  binary.size() =", binary.size())
-            print("="*30)
+            #print("Parameter size after packing")
+            #print("  alpha.size()  =", alpha.size())
+            #print("  binary.size() =", binary.size())
+            #print("="*30)
 
-            module.alpha = alpha
-            module.binary = binary
-            module.w_quant = w_quant
+            #module.alpha = alpha
+            #module.binary = binary
+            #module.w_quant = w_quant
 
 
     return model
