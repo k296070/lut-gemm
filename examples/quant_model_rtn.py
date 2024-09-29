@@ -197,11 +197,24 @@ def main():
     real_quantize_model_weight(
         model, w_bit=args.qbits, init_only=True
     )
-    
+    max_memory = [v.split(":") for v in ([])]
+    max_memory = {(int(k) if k.isdigit() else k): v for k, v in max_memory}
+    kwargs = {"max_memory": max_memory} if len(max_memory) else {}
+    device_map = infer_auto_device_map(
+        model,
+        no_split_module_classes=[
+            "OPTDecoderLayer",
+            "LlamaDecoderLayer",
+            "BloomBlock",
+            "MPTBlock",
+            "DecoderLayer",
+        ],
+        **kwargs,
+    )
     load_checkpoint_in_model(
         model,
         checkpoint=args.load_quant,
-        device_map="auto",
+        device_map=device_map,
         offload_state_dict=True,
     )
 
