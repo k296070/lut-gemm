@@ -160,7 +160,7 @@ class WQLinear(nn.Module):
             "binary",
             torch.zeros(
                 (
-                    out_features*in_features*self.w_bit//4
+                    out_features*in_features*self.w_bit//8
                 ),
                 dtype=torch.int8,
                 device=dev,
