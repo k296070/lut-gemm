@@ -59,10 +59,6 @@ def get_blocks(model):
     elif model.__class__.__name__ == "LlavaLlamaForCausalLM":
         # layers = [model.model.layers, model.model.vision_tower.vision_tower.vision_model.encoder.layers]
         layers = model.model.layers
-    elif isinstance(model, OPTForCausalLM):
-        layers = model.model.decoder.layers
-    elif isinstance(model, BloomForCausalLM):
-        layers = model.transformer.h
     elif "mpt" in str(model.__class__).lower():
         layers = model.transformer.blocks
     elif "falcon" in str(model.__class__).lower():
@@ -71,6 +67,8 @@ def get_blocks(model):
         layers = model.transformer.h
     elif "neox" in str(model.__class__).lower():
         layers = model.gpt_neox.layers
+    elif "phi" in str(model.__class__).lower():
+        layers = model.model.layers 
     else:
         raise NotImplementedError(type(model))
     return layers
@@ -116,7 +114,12 @@ def parse_args():
         default='facebook/opt-125m',
         help="Path to pretrained model or model identifier from huggingface.co/models.",
     )
-
+    parser.add_argument(
+        "--output_name",
+        type=str,
+        default='facebook/opt-125m',
+        help="Path to pretrained model or model identifier from huggingface.co/models.",
+    )
     parser.add_argument(
         "--cache_dir",
         type=str,
@@ -224,8 +227,8 @@ def main():
                   "model.layers.30.self_attn.v_proj.binary":model.state_dict()["model.layers.30.self_attn.v_proj.binary"],
 
     }
-    #torch.save(filtered_state_dict,"output-4bit.pt")
-    torch.save(lay_30diict,"layer30_v_proj_weight_packed.pt")
+    torch.save(filtered_state_dict,args.output_name)
+    #torch.save(lay_30diict,"layer30_v_proj_weight_packed.pt")
 
 if __name__ == "__main__":
     main()
