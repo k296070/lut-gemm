@@ -155,7 +155,7 @@ def quant_model(model, args):
     
         for name, module in named_linears.items():
 
-            print(name)
+            #print(name)
             
             # INT4 Quantization -> RTN
             w_rtn = RTNParameter()
@@ -180,7 +180,7 @@ def quant_model(model, args):
 
             module.w_quant = binary
             module.alpha = alpha
-            module.q_bias = scale * zero
+            module.q_bias = offset
 
             #print("Parameter size after packing")
             #print("  alpha.size()  =", alpha.size())
