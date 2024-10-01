@@ -92,7 +92,7 @@ class RTNParameter(CompressionParameter):
         if do_packing == True:
             binary, binary_shape = PACKER.pack(binary)
             binary = binary.to(self.data.device)
-
+            print(binary,self.data.device)
         return scale, binary, binary_shape, offset
 
 if __name__ == '__main__':
