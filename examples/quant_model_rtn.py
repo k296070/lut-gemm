@@ -218,6 +218,7 @@ def main():
         checkpoint=args.load_quant,
         device_map=device_map,
         offload_state_dict=True,
+        offload_folder="/tmp/offload"
     )
 
     quant_model(model, args)
