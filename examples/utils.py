@@ -162,8 +162,8 @@ class Packer:
     def pack(self, b):
         shape = b.shape
         p_b = b
-        #if torch.cuda.is_available():
-            #p_b = p_b.cuda()
+        if torch.cuda.is_available():
+            p_b = p_b.cuda()
         p_b = (p_b + 1) / 2  # (-1., +1.) -> (0, 1)
         p_b = torch.reshape(p_b, [8, -1]).type(torch.uint8)
         p_b = p_b * self.s
