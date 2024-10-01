@@ -159,9 +159,9 @@ def quant_model(model, args):
             
             # INT4 Quantization -> RTN
             w_rtn = RTNParameter()
-            scale = module.scales
-            zero = module.scaled_zeros
-            w_quant = module.qweight
+            scale = module.scales.to(torch.device('cuda:0'))
+            zero = module.scaled_zeros.to(torch.device('cuda:0'))
+            w_quant = module.qweight.to(torch.device('cuda:0'))
 
             # Convert INT4 -> BCQ4
             alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
