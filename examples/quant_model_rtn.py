@@ -162,7 +162,7 @@ def quant_model(model, args):
             scale = module.scales.to(torch.device('cpu'))
             zero = module.scaled_zeros.to(torch.device('cpu'))
             w_quant = module.qweight.to(torch.device('cpu'))
-
+            print(w_quant)
             # Convert INT4 -> BCQ4
             #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
             #    scale, zero, w_quant, qbits=args.qbits,
