@@ -164,9 +164,9 @@ def quant_model(model, args):
             w_quant = module.qweight
 
             # Convert INT4 -> BCQ4
-            alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
-                scale, zero, w_quant, qbits=args.qbits,
-                do_packing=False, in_ch_wise=False)
+            #alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(
+            #    scale, zero, w_quant, qbits=args.qbits,
+            #    do_packing=False, in_ch_wise=False)
 
             #print("Parameter size before packing")
             #print("  alpha.size()  =", alpha.size())
