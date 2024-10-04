@@ -96,7 +96,7 @@ class RTNParameter(CompressionParameter):
         return scale, binary, binary_shape, offset
 
 if __name__ == '__main__':
-    w_org = torch.randn(1024, 256)
+    w_org = torch.randn(1024, 4096)
 
     # INT4 Quantization -> RTN
     w_rtn = RTNParameter(w_org)
@@ -105,9 +105,11 @@ if __name__ == '__main__':
     print(abs(w_org-w_rtn.data).mean())
 
     # Convert INT4 -> BCQ4
-    alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(scale, zero, w_quant, qbits=4, do_packing=False, in_ch_wise=False)
-
-    # BCQ Decompress Check
-    w_bcq = BCQParameter(w_org)
-    w_bcq.decompress(alpha, binary, binary_shape, offset=offset, do_packing=False, in_ch_wise=False)
-    print(abs(w_bcq.data - w_rtn.data).mean())
+    alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(scale, zero, w_quant, qbits=4, do_packing=True, in_ch_wise=False)
+    state_dict = {
+        "alpha":alpha,
+        "binary" :binary,
+        "q_bias" :offset
+    }
+    torch.save(w_org,"../random_weight.pt")
+    torch.save(state_dict,"../random_weight_packed.pt")
