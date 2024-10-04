@@ -105,11 +105,12 @@ if __name__ == '__main__':
     print(abs(w_org-w_rtn.data).mean())
 
     # Convert INT4 -> BCQ4
-    alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(scale, zero, w_quant, qbits=4, do_packing=True, in_ch_wise=False)
+    alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(scale, zero, w_quant, qbits=4, do_packing=False, in_ch_wise=False)
     state_dict = {
         "alpha":alpha,
         "binary" :binary,
         "q_bias" :offset
     }
+
     torch.save(w_org,"../../random_weight.pt")
     torch.save(state_dict,"../../random_weight_packed.pt")
