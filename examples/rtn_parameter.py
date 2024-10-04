@@ -111,5 +111,5 @@ if __name__ == '__main__':
         "binary" :binary,
         "q_bias" :offset
     }
-    torch.save(w_org,"../random_weight.pt")
-    torch.save(state_dict,"../random_weight_packed.pt")
+    torch.save(w_org,"../../random_weight.pt")
+    torch.save(state_dict,"../../random_weight_packed.pt")
