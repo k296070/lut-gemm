@@ -119,7 +119,7 @@ if __name__ == '__main__':
 
     # INT4 Quantization -> RTN
     w_rtn = RTNParameter(w_org)
-    scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
+    scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=True, qbits=4, group_size=128, perchannel=True, sym=False)
     #scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
     print(abs(w_org-w_rtn.data).mean())
     print("quant",scale.shape,zero.shape,w_quant.shape)
