@@ -87,26 +87,26 @@ class RTNParameter(CompressionParameter):
         bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cuda')
 
         if do_packing == True:
-            for n in range(0,N,4):
-                for b in range(qbits):
-                    for k in range(0, K, 32):
-                        s1 = 0
-                        s2 = 0
-                        s3 = 0
-                        s4 = 0
-                        for t in range(32):
-                            if binary_[n][b][k + t] == 1:
-                                s1 |= (1 << t)  # 비트를 설정
-                            if binary_[n+1][b][k + t] == 1:
-                                s2 |= (1 << t)  # 비트를 설정
-                            if binary_[n+2][b][k + t] == 1:
-                                s3 |= (1 << t)  # 비트를 설정
-                            if binary_[n+3][b][k + t] == 1:
-                                s4 |= (1 << t)  # 비트를 설정                                                                                                
-                        bW[k // 32][b][n] = s1
-                        bW[k // 32][b][n+1] = s2
-                        bW[k // 32][b][n+2] = s3
-                        bW[k // 32][b][n+3] = s4
+            for n in range(N):
+                b=0
+                for k in range(0, K, 32):
+                    s1 = 0
+                    s2 = 0
+                    s3 = 0
+                    s4 = 0
+                    for t in range(32):
+                        if binary_[n][b][k + t] == 1:
+                            s1 |= (1 << t)  # 비트를 설정
+                        if binary_[n+1][b+1][k + t] == 1:
+                            s2 |= (1 << t)  # 비트를 설정
+                        if binary_[n+2][b+2][k + t] == 1:
+                            s3 |= (1 << t)  # 비트를 설정
+                        if binary_[n+3][b+3][k + t] == 1:
+                            s4 |= (1 << t)  # 비트를 설정                                                                                                
+                    bW[k // 32][b+1][n] = s1
+                    bW[k // 32][b+2][n] = s2
+                    bW[k // 32][b+3][n] = s3
+                    bW[k // 32][b][n] = s4
 
 
         bW = bW.to(torch.int32)
