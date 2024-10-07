@@ -122,7 +122,7 @@ if __name__ == '__main__':
     scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
     #scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
     print(abs(w_org-w_rtn.data).mean())
-
+    print("quant",scale.shape,zero.shape,w_quant.shape)
     # Convert INT4 -> BCQ4
     alpha, binary, binary_shape, offset = w_rtn.convert_bcq_format(scale, zero, w_quant, qbits=4, do_packing=True, in_ch_wise=True)
     state_dict = {
