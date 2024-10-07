@@ -5,9 +5,6 @@ import numpy as np
 #from clet.functions.rtn import Quantizer
 from utils import CompressionParameter, PACKER, Quantizer
 from bcq_parameter import BCQParameter
-from concurrent.futures import ProcessPoolExecutor
-
-
 
 class RTNParameter(CompressionParameter):
     def compress(self, in_ch_wise=False, **kwargs):
@@ -84,25 +81,21 @@ class RTNParameter(CompressionParameter):
         N = binary.shape[0] #output
 
         scale_ = scale.permute(1,2,0).contiguous() # G B O
-        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cpu'))
+        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cuda'))
         offset_ = offset.permute(1,0).contiguous() # G O
 
-        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cpu')
-        
-        with ProcessPoolExecutor() as executor:
-            futures = []
-            for b in range(qbits):
-                for n in range(N):
-                    for k in range(0,K,64):
-                        if(k+64<K):
-                            k_e = k+64
-                        else:
-                            k_e = k+32
-                        futures.append(executor.submit(process_chunk, b, n, k,k_e, binary_, bW))
+        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cuda')
 
+        if do_packing == True:
+            for n in range(N):
+                for b in range(qbits):
+                    for k in range(0, K, 32):
+                        s = 0
+                        for t in range(32):
+                            if binary_[n][b][k + t] == 1:
+                                s |= (1 << t)  # 비트를 설정
+                        bW[k // 32][b][n] = s
 
-        for future in futures:
-            future.result()
 
         bW = bW.to(torch.int32)
         return scale_, bW, binary_shape, offset_
