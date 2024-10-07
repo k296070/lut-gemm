@@ -101,7 +101,7 @@ class RTNParameter(CompressionParameter):
 
         N = binary.shape[2]
 
-        bW = np.zeros([K // 32, qbits, N], dtype=np.uint32)
+        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int32)
         binary_shape = binary.shape
         if do_packing == True:
             for n in range(N):
@@ -131,6 +131,6 @@ if __name__ == '__main__':
         "binary" :binary,
         "q_bias" :offset
     }
-    print(binary.size,alpha.size,offset.size)
+    print(binary.size(),alpha.size(),offset.size())
     torch.save(w_org,"../../random_weight.pt")
     torch.save(state_dict,"../../random_weight_packed.pt")
