@@ -38,7 +38,7 @@ class RTNParameter(CompressionParameter):
                 data = data.reshape([-1, group_size])
             quant.find_params(data, weight=True)
             quant_data  = torch.clamp(torch.round(data / quant.scale) + quant.zero, 0, quant.maxq)
-            quant_data  = quant_data.reshape([out_ch, -1, group_size]).to(torch.int)
+            quant_data  = quant_data.reshape([out_ch, -1]).to(torch.int)
             quant.scale = quant.scale.reshape([out_ch, -1, 1])
             quant.zero  = quant.zero.reshape([out_ch, -1, 1])
         else:
@@ -91,15 +91,15 @@ class RTNParameter(CompressionParameter):
         binary_shape = binary.shape
         for i in range(qbits):
             binary[:, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
-        
-        scale = scale.permute(0,2,1)
-        binary = binary.permute(0,2,1)
-
-        K = binary.shape[0]
+                    #o,i
+        scale = scale.permute(1,2,0)
+        binary = binary.permute(1,2,0)
+        offset = offset.permute(1,0,2)
+        K = binary.shape[0] #input
         
         binary = binary.reshape(K,qbits,-1)
 
-        N = binary.shape[2]
+        N = binary.shape[2] #output
 
         bW = torch.zeros([K // 32, qbits, N], dtype=torch.int32)
         binary_shape = binary.shape
@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
     # INT4 Quantization -> RTN
     w_rtn = RTNParameter(w_org)
-    scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=True, qbits=4, group_size=128, perchannel=True, sym=False)
+    scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
     #scale, zero, w_quant, w_quant_shape = w_rtn.compress(in_ch_wise=False, qbits=4, group_size=128, perchannel=True, sym=False)
     print(abs(w_org-w_rtn.data).mean())
     print("quant",scale.shape,zero.shape,w_quant.shape)
