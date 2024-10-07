@@ -81,19 +81,24 @@ class RTNParameter(CompressionParameter):
         N = binary.shape[0] #output
 
         scale_ = scale.permute(1,2,0).contiguous() # G B O
-        binary_ = binary.permute(1,2,0).contiguous().to(torch.device('cpu'))
+        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cuda'))
         offset_ = offset.permute(1,0).contiguous() # G O
 
-        bW = np.zeros((K // 32, qbits, N), dtype=np.uint32)
+        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cuda')
 
-        for b in range(qbits):
+        if do_packing == True:
             for n in range(N):
-                for k in range(0, K, 32):
-                    s = np.dot(binary_[k:k+32, b, n] , 1 << np.arange(32))
-                    bW[k // 32, b, n] = s # 32비트 값만 저장
+                for b in range(qbits):
+                    for k in range(0, K, 32):
+                        s = 0
+                        for t in range(32):
+                            if binary_[n][b][k + t] == 1:
+                                s |= (1 << t)  # 비트를 설정
+                        bW[k // 32][b][n] = s
 
-        bW_ = torch.from_numpy(bW).to(torch.int32)
-        return scale_, bW_, binary_shape, offset_
+
+        bW = bW.to(torch.int32)
+        return scale_, bW, binary_shape, offset_
 
 if __name__ == '__main__':
     w_org = torch.randn(1024, 4096)
