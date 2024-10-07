@@ -90,10 +90,10 @@ class RTNParameter(CompressionParameter):
         N = binary.shape[0] #output
 
         scale_ = scale.permute(1,2,0).contiguous() # G B O
-        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cuda'))
+        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cpu'))
         offset_ = offset.permute(1,0).contiguous() # G O
 
-        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cuda')
+        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cpu')
         
         with ProcessPoolExecutor() as executor:
             futures = []
