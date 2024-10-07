@@ -112,7 +112,7 @@ class RTNParameter(CompressionParameter):
                         bW[k // 32][b][n] = (s & 0xFFFFFFFF)
 
         bW = bW.to(torch.int32).contiguous()
-        return scale, bW, binary_shape, offset, binary
+        return scale, bW, binary_shape, offset
 
 if __name__ == '__main__':
     w_org = torch.randn(1024, 4096)
