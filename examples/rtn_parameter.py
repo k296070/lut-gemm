@@ -95,9 +95,9 @@ class RTNParameter(CompressionParameter):
         K = binary.shape[1] #input
         N = binary.shape[0] #output
 
-        scale = scale.permute(1,2,0).contiguos() # G B O
-        binary = binary.permute(1,2,0).contiguos() # I B O
-        offset = offset.permute(1,0).contiguos() # G O
+        scale = scale.permute(1,2,0).contiguous() # G B O
+        binary = binary.permute(1,2,0).contiguous() # I B O
+        offset = offset.permute(1,0).contiguous() # G O
 
         bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64)
     
@@ -111,7 +111,7 @@ class RTNParameter(CompressionParameter):
                                 s |= (1 << t)  # 비트를 설정
                         bW[k // 32][b][n] = (s & 0xFFFFFFFF)
 
-        bW = bW.to(torch.int32).contiguos()
+        bW = bW.to(torch.int32).contiguous()
         return scale, bW, binary_shape, offset, binary
 
 if __name__ == '__main__':
