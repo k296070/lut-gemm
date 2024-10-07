@@ -97,11 +97,11 @@ class RTNParameter(CompressionParameter):
                     for t in range(32):
                         if binary_[n][b][k + t] == 1:
                             s1 |= (1 << t)  # 비트를 설정
-                        if binary_[n+1][b+1][k + t] == 1:
+                        if binary_[n][b+1][k + t] == 1:
                             s2 |= (1 << t)  # 비트를 설정
-                        if binary_[n+2][b+2][k + t] == 1:
+                        if binary_[n][b+2][k + t] == 1:
                             s3 |= (1 << t)  # 비트를 설정
-                        if binary_[n+3][b+3][k + t] == 1:
+                        if binary_[n][b+3][k + t] == 1:
                             s4 |= (1 << t)  # 비트를 설정                                                                                                
                     bW[k // 32][b+1][n] = s1
                     bW[k // 32][b+2][n] = s2
