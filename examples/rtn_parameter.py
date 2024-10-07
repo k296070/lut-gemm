@@ -88,12 +88,27 @@ class RTNParameter(CompressionParameter):
         binary_shape = binary.shape
         for i in range(qbits):
             binary[:, :, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
+        binary.permute(0, 3, 1, 2)
 
+        K = binary.shape[0]
+        
+        binary = binary.reshape(K,qbits,-1)
+
+        N = binary.shape[2]
+
+        bW = torch.zeros([K//32,qbits,N], dtype=torch.int32)
+        binary_shape = binary.shape
         if do_packing == True:
-            binary, binary_shape = PACKER.pack(binary)
-            binary = binary.to(self.data.device)
+            for n in range(N):
+                for b in range(qbits):
+                    for k in range(0, K, 32):
+                        s = 0
+                        for t in range(32):
+                            if binary[k + t][b][n] == 1:
+                                s |= 1 << t  # 비트를 설정
+                        bW[k // 32][b][n] = s
 
-        return scale, binary, binary_shape, offset
+        return scale, bW, binary_shape, offset
 
 if __name__ == '__main__':
     w_org = torch.randn(1024, 4096)
