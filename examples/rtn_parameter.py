@@ -91,8 +91,9 @@ class RTNParameter(CompressionParameter):
         binary_shape = binary.shape
         for i in range(qbits):
             binary[:, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
-
-        binary.permute(0,2,1)
+            
+        scale = scale.permute(0,2,1)
+        binary = binary.permute(0,2,1)
 
         K = binary.shape[0]
         
