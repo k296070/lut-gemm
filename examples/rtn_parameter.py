@@ -111,7 +111,7 @@ class RTNParameter(CompressionParameter):
                             if binary[k + t][b][n] == 1:
                                 s |= 1 << t  # 비트를 설정
                         bW[k // 8][b][n] = s
-        bW = bW.to(torch.int8)
+        bW = bW.to(torch.uint8)
         return scale, bW, binary_shape, offset
 
 if __name__ == '__main__':
