@@ -101,7 +101,7 @@ class RTNParameter(CompressionParameter):
 
         N = binary.shape[2] #output
 
-        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int32)
+        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64)
         binary_shape = binary.shape
         if do_packing == True:
             for n in range(N):
@@ -112,7 +112,7 @@ class RTNParameter(CompressionParameter):
                             if binary[k + t][b][n] == 1:
                                 s |= 1 << t  # 비트를 설정
                         bW[k // 32][b][n] = (s & 0xFFFFFFFF)
-
+        bW = bW.to(torch.int32)
         return scale, bW, binary_shape, offset
 
 if __name__ == '__main__':
