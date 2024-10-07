@@ -7,13 +7,7 @@ from utils import CompressionParameter, PACKER, Quantizer
 from bcq_parameter import BCQParameter
 from concurrent.futures import ProcessPoolExecutor
 
-def process_chunk(b, n, k_s,k_e, binary, bW):
-    for k in range(k_s, k_e, 32):
-        s = 0
-        for t in range(32):
-            if binary[n][b][k + t] == 1:
-                s |= (1 << t)  # 비트를 설정
-        bW[k // 32][b][n] = s
+
 
 class RTNParameter(CompressionParameter):
     def compress(self, in_ch_wise=False, **kwargs):
