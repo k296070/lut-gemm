@@ -63,7 +63,7 @@ class RTNParameter(CompressionParameter):
         global PACKER
 
         zero   = scale * zero #O ,#G,1
-        upack  = torch.Tensor([[2**(i) for i in range(qbits)]]).to(torch.device('cuda:0'))
+        upack  = torch.Tensor([[2**(i) for i in range(qbits)]])
         scale  = scale / 2.0
         scale  = torch.matmul(scale, upack) #O G B
 
