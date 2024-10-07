@@ -96,7 +96,7 @@ class RTNParameter(CompressionParameter):
 
         N = binary.shape[2]
 
-        bW = torch.zeros([K//32,qbits,N], dtype=np.int64)
+        bW = torch.zeros([K//32,qbits,N], dtype=torch.int64)
         binary_shape = binary.shape
         if do_packing == True:
             for n in range(N):
