@@ -131,6 +131,6 @@ if __name__ == '__main__':
         "binary" :binary,
         "q_bias" :offset
     }
-    print(binary.size(),alpha.size(),offset.size())
+    print(binary.size,alpha.size,offset.size)
     torch.save(w_org,"../../random_weight.pt")
     torch.save(state_dict,"../../random_weight_packed.pt")
