@@ -101,7 +101,7 @@ class RTNParameter(CompressionParameter):
         return scale_, bW, binary_shape, offset_
 
 if __name__ == '__main__':
-    w_org = torch.randn(4096, 1024)
+    w_org = torch.randn(1024, 4096)
 
     # INT4 Quantization -> RTN
     w_rtn = RTNParameter(w_org)
