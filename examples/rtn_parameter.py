@@ -1,18 +1,3 @@
-# LUT-GEMM
-# Copyright (c) 2024-present NAVER Cloud Corp. All rights reserved.
-# 
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-# 
-#     http://www.apache.org/licenses/LICENSE-2.0
-# 
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
 import torch
 import torch.nn as nn
 import numpy as np
@@ -38,7 +23,7 @@ class RTNParameter(CompressionParameter):
                 data = data.reshape([-1, group_size])
             quant.find_params(data, weight=True)
             quant_data  = torch.clamp(torch.round(data / quant.scale) + quant.zero, 0, quant.maxq)
-            quant_data  = quant_data.reshape([out_ch, -1]).to(torch.int)
+            quant_data  = quant_data.reshape([out_ch, -1, group_size]).to(torch.int)
             quant.scale = quant.scale.reshape([out_ch, -1, 1])
             quant.zero  = quant.zero.reshape([out_ch, -1, 1])
         else:
@@ -77,45 +62,26 @@ class RTNParameter(CompressionParameter):
     def convert_bcq_format(self, scale, zero, quant_data, qbits, do_packing=False, in_ch_wise=False):
         global PACKER
 
-        zero   = scale * zero #O ,#G,1
-        upack  = torch.Tensor([[2**(i) for i in range(qbits)]])
+        zero   = scale * zero
+        upack  = torch.Tensor([[2**i for i in range(qbits)]])
         scale  = scale / 2.0
-        scale  = torch.matmul(scale, upack) #O G B
+        scale  = torch.matmul(scale, upack)
 
-        offset = scale.sum(-1).unsqueeze(-1) - zero #O G 1
-        offset= offset.reshape(offset.shape[0],-1)
+        offset = scale.sum(-1).unsqueeze(-1) - zero
+
         binary = torch.zeros(list(quant_data.shape) + [qbits])
         binary_shape = binary.shape
-        
-        quant_data = quant_data.to(torch.int)
         for i in range(qbits):
-            binary[:, :, i] = ((quant_data >> i) & 1) * 2 - 1
-            # O I B
+            binary[:, :, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
 
-        K = binary.shape[1] #input
-        N = binary.shape[0] #output
-
-        scale = scale.permute(1,2,0).contiguous() # G B O
-        binary = binary.permute(1,2,0).contiguous() # I B O
-        offset = offset.permute(1,0).contiguous() # G O
-
-        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64)
-    
         if do_packing == True:
-            for n in range(N):
-                for b in range(qbits):
-                    for k in range(0, K, 32):
-                        s = 0
-                        for t in range(32):
-                            if binary[k + t][b][n] == 1:
-                                s |= (1 << t)  # 비트를 설정
-                        bW[k // 32][b][n] = (s & 0xFFFFFFFF)
+            binary, binary_shape = PACKER.pack(binary)
+            binary = binary.to(self.data.device)
 
-        bW = bW.to(torch.int32).contiguous()
-        return scale, bW, binary_shape, offset
+        return scale, binary, binary_shape, offset
 
 if __name__ == '__main__':
-    w_org = torch.randn(1024, 4096)
+    w_org = torch.randn(4096, 1024)
 
     # INT4 Quantization -> RTN
     w_rtn = RTNParameter(w_org)
