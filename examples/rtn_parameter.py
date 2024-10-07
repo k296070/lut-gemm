@@ -86,8 +86,10 @@ class RTNParameter(CompressionParameter):
         offset= offset.reshape(offset.shape[0],-1)
         binary = torch.zeros(list(quant_data.shape) + [qbits])
         binary_shape = binary.shape
+        
+        quant_data = quant_data.to (torch.int)
         for i in range(qbits):
-            binary[:, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
+            binary[:, :, i] = ((quant_data >> i) & 1) * 2 - 1
             # O I B
 
         K = binary.shape[1] #input
