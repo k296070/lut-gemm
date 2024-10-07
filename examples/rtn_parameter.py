@@ -99,12 +99,8 @@ class RTNParameter(CompressionParameter):
             futures = []
             for b in range(qbits):
                 for n in range(N):
-                    for k in range(0,K,128):
-                        if(k+128<K):
-                            k_e = k+128
-                        elif(k+96<K):
-                            k_e = k+96
-                        elif(k+64<K):
+                    for k in range(0,K,64):
+                        if(k+64<K):
                             k_e = k+64
                         else:
                             k_e = k+32
