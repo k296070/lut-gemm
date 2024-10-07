@@ -91,7 +91,7 @@ class RTNParameter(CompressionParameter):
         binary_shape = binary.shape
         for i in range(qbits):
             binary[:, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
-            
+        
         scale = scale.permute(0,2,1)
         binary = binary.permute(0,2,1)
 
@@ -131,6 +131,6 @@ if __name__ == '__main__':
         "binary" :binary,
         "q_bias" :offset
     }
-
+    print(binary.size(),alpha.size(),offset.size())
     torch.save(w_org,"../../random_weight.pt")
     torch.save(state_dict,"../../random_weight_packed.pt")
