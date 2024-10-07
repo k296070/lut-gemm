@@ -8,7 +8,7 @@ from bcq_parameter import BCQParameter
 from concurrent.futures import ProcessPoolExecutor
 
 def process_chunk(b, n, k_s,k_e, binary, bW):
-    c
+    for k in range(k_s, k_e, 32):
         s = 0
         for t in range(32):
             if binary[n][b][k + t] == 1:
