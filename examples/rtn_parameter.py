@@ -78,7 +78,7 @@ class RTNParameter(CompressionParameter):
         global PACKER
 
         zero   = scale * zero #O ,#G,1
-        upack  = torch.Tensor([[2**i for i in range(qbits)]])
+        upack  = torch.Tensor([[2**(-i) for i in range(qbits)]])
         scale  = scale / 2.0
         scale  = torch.matmul(scale, upack) #O G B
 
@@ -88,14 +88,14 @@ class RTNParameter(CompressionParameter):
         binary_shape = binary.shape
         for i in range(qbits):
             binary[:, :, i] = ((quant_data >> i) & 1) * 2.0 - 1.0
-                    #o,i
+            # O I B
 
         K = binary.shape[1] #input
         N = binary.shape[0] #output
 
-        scale = scale.permute(0,2,1) # G B O
+        scale = scale.permute(1,2,0) # G B O
         binary = binary.permute(1,2,0) # I B O
-        #offset = offset.permute(1,0) # 
+        offset = offset.permute(1,0) # G O
 
         bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64)
     
@@ -108,9 +108,7 @@ class RTNParameter(CompressionParameter):
                             if binary[k + t][b][n] == 1:
                                 s |= (1 << t)  # 비트를 설정
                         bW[k // 32][b][n] = (s & 0xFFFFFFFF)
-        bW = bW.to(torch.int32)
-        
-        bW = bW.permute(2,1,0) # G B O
+
 
         return scale, bW, binary_shape, offset
 
