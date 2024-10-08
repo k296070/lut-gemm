@@ -80,7 +80,7 @@ class RTNParameter(CompressionParameter):
         N = binary.shape[0] #output
 
         scale_ = scale.permute(1,2,0).contiguous() # G B O
-        binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cuda'))
+        binary_ = binary.permute(0,2,1).reshape(-1,32).contiguous().to(torch.device('cuda'))
         offset_ = offset.permute(1,0).contiguous() # G O
 
         matrix_132 = torch.tensor([1<<i for i in range(32)],dtype=torch.int64,device= "cuda")
