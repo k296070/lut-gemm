@@ -69,14 +69,13 @@ class RTNParameter(CompressionParameter):
 
         offset = scale.sum(-1).unsqueeze(-1) - zero #O G 1
         offset= offset.reshape(offset.shape[0],-1)
-        binary = torch.zeros(list(quant_data.shape) + [qbits])
+        binary = torch.zeros(list(quant_data.shape) + [qbits],dtype =torch.int32)
         binary_shape = binary.shape
         
         quant_data = quant_data.to(torch.int)
         for i in range(qbits):
-            binary[:, :, i] = ((quant_data >> i) & 1) * 2 - 1 # O I B
+            binary[:, :, i] = ((quant_data >> i) & 1) # O I B
 
-        K = binary.shape[1] #input
         N = binary.shape[0] #output
 
         scale_ = scale.permute(1,2,0).contiguous() # G B O
