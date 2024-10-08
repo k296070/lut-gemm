@@ -74,8 +74,7 @@ class RTNParameter(CompressionParameter):
         
         quant_data = quant_data.to(torch.int)
         for i in range(qbits):
-            binary[:, :, i] = ((quant_data >> i) & 1) * 2 - 1
-            # O I B
+            binary[:, :, i] = ((quant_data >> i) & 1) * 2 - 1 # O I B
 
         K = binary.shape[1] #input
         N = binary.shape[0] #output
@@ -84,33 +83,14 @@ class RTNParameter(CompressionParameter):
         binary_ = binary.permute(0,2,1).contiguous().to(torch.device('cuda'))
         offset_ = offset.permute(1,0).contiguous() # G O
 
-        bW = torch.zeros([K // 32, qbits, N], dtype=torch.int64,device ='cuda')
+        matrix_132 = torch.tensor([1<<i for i in range(32)],dtype=torch.int64,device= "cuda")
 
-        if do_packing == True:
-            for n in range(N):
-                b=0
-                for k in range(0, K, 32):
-                    s1 = 0
-                    s2 = 0
-                    s3 = 0
-                    s4 = 0
-                    for t in range(32):
-                        if binary_[n][b][k + t] == 1:
-                            s1 |= (1 << t)  # 비트를 설정
-                        if binary_[n][b+1][k + t] == 1:
-                            s2 |= (1 << t)  # 비트를 설정
-                        if binary_[n][b+2][k + t] == 1:
-                            s3 |= (1 << t)  # 비트를 설정
-                        if binary_[n][b+3][k + t] == 1:
-                            s4 |= (1 << t)  # 비트를 설정                                                                                                
-                    bW[k // 32][b+1][n] = s1
-                    bW[k // 32][b+2][n] = s2
-                    bW[k // 32][b+3][n] = s3
-                    bW[k // 32][b][n] = s4
+        bW_ = binary_*matrix_132
 
-
-        bW = bW.to(torch.int32)
-        return scale_, bW, binary_shape, offset_
+        bW__ = torch.sum(bW_, dim=1, keepdim=True)
+        bW___ = bW__.reshape(N,qbits,-1).permute(2,1,0).contiguous()
+        
+        return scale_, bW___, binary_shape, offset_
 
 if __name__ == '__main__':
     w_org = torch.randn(1024, 4096)
